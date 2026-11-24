@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,33 +44,33 @@ public class DesignTacoControllerTest {
   @BeforeEach
   public void setup() {
     ingredients = Arrays.asList(
-      new Ingredient("FLTO", "Flour Tortilla", Type.WRAP),
-      new Ingredient("COTO", "Corn Tortilla", Type.WRAP),
-      new Ingredient("GRBF", "Ground Beef", Type.PROTEIN),
-      new Ingredient("CARN", "Carnitas", Type.PROTEIN),
-      new Ingredient("TMTO", "Diced Tomatoes", Type.VEGGIES),
-      new Ingredient("LETC", "Lettuce", Type.VEGGIES),
-      new Ingredient("CHED", "Cheddar", Type.CHEESE),
-      new Ingredient("JACK", "Monterrey Jack", Type.CHEESE),
-      new Ingredient("SLSA", "Salsa", Type.SAUCE),
-      new Ingredient("SRCR", "Sour Cream", Type.SAUCE)
+      new Ingredient("FLTO", "Flour Tortilla", Type.WRAP, BigDecimal.valueOf(0.50)),
+      new Ingredient("COTO", "Corn Tortilla", Type.WRAP, BigDecimal.valueOf(0.50)),
+      new Ingredient("GRBF", "Ground Beef", Type.PROTEIN, BigDecimal.valueOf(1.50)),
+      new Ingredient("CARN", "Carnitas", Type.PROTEIN, BigDecimal.valueOf(1.50)),
+      new Ingredient("TMTO", "Diced Tomatoes", Type.VEGGIES, BigDecimal.valueOf(0.25)),
+      new Ingredient("LETC", "Lettuce", Type.VEGGIES, BigDecimal.valueOf(0.25)),
+      new Ingredient("CHED", "Cheddar", Type.CHEESE, BigDecimal.valueOf(0.75)),
+      new Ingredient("JACK", "Monterrey Jack", Type.CHEESE, BigDecimal.valueOf(0.75)),
+      new Ingredient("SLSA", "Salsa", Type.SAUCE, BigDecimal.valueOf(0.25)),
+      new Ingredient("SRCR", "Sour Cream", Type.SAUCE, BigDecimal.valueOf(0.25))
     );
 
     when(ingredientRepository.findAll())
         .thenReturn(ingredients);
 
-    when(ingredientRepository.findById("FLTO")).thenReturn(Optional.of(new Ingredient("FLTO", "Flour Tortilla", Type.WRAP)));
-    when(ingredientRepository.findById("GRBF")).thenReturn(Optional.of(new Ingredient("GRBF", "Ground Beef", Type.PROTEIN)));
-    when(ingredientRepository.findById("CHED")).thenReturn(Optional.of(new Ingredient("CHED", "Cheddar", Type.CHEESE)));
+    when(ingredientRepository.findById("FLTO")).thenReturn(Optional.of(new Ingredient("FLTO", "Flour Tortilla", Type.WRAP, BigDecimal.valueOf(0.50))));
+    when(ingredientRepository.findById("GRBF")).thenReturn(Optional.of(new Ingredient("GRBF", "Ground Beef", Type.PROTEIN, BigDecimal.valueOf(1.50))));
+    when(ingredientRepository.findById("CHED")).thenReturn(Optional.of(new Ingredient("CHED", "Cheddar", Type.CHEESE, BigDecimal.valueOf(0.75))));
     
     design = new Taco();
     design.setName("Test Taco");
 
     design.setIngredients(
         Arrays.asList(
-            new Ingredient("FLTO", "Flour Tortilla", Type.WRAP),
-            new Ingredient("GRBF", "Ground Beef", Type.PROTEIN),
-            new Ingredient("CHED", "Cheddar", Type.CHEESE)
+            new Ingredient("FLTO", "Flour Tortilla", Type.WRAP, BigDecimal.valueOf(0.50)),
+            new Ingredient("GRBF", "Ground Beef", Type.PROTEIN, BigDecimal.valueOf(1.50)),
+            new Ingredient("CHED", "Cheddar", Type.CHEESE, BigDecimal.valueOf(0.75))
           )
         );
   }
@@ -92,7 +93,7 @@ public class DesignTacoControllerTest {
         .content("name=Test+Taco&ingredients=FLTO,GRBF,CHED")
         .contentType(MediaType.APPLICATION_FORM_URLENCODED))
         .andExpect(status().is3xxRedirection())
-        .andExpect(header().stringValues("Location", "/orders/current"));
+        .andExpect(header().stringValues("Location", "/cart"));
   }
 
 }

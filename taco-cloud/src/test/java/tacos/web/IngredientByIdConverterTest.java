@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.math.BigDecimal;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ public class IngredientByIdConverterTest {
   public void setup() {
     IngredientRepository ingredientRepo = mock(IngredientRepository.class);
     when(ingredientRepo.findById("AAAA"))
-        .thenReturn(Optional.of(new Ingredient("AAAA", "TEST INGREDIENT", Type.CHEESE)));
+        .thenReturn(Optional.of(new Ingredient("AAAA", "TEST INGREDIENT", Type.CHEESE, BigDecimal.valueOf(0.75))));
     when(ingredientRepo.findById("ZZZZ"))
         .thenReturn(Optional.empty());
     
@@ -31,7 +32,7 @@ public class IngredientByIdConverterTest {
   @Test
   public void shouldReturnValueWhenPresent() {
     assertThat(converter.convert("AAAA"))
-        .isEqualTo(new Ingredient("AAAA", "TEST INGREDIENT", Type.CHEESE));
+        .isEqualTo(new Ingredient("AAAA", "TEST INGREDIENT", Type.CHEESE, BigDecimal.valueOf(0.75)));
   }
 
   @Test

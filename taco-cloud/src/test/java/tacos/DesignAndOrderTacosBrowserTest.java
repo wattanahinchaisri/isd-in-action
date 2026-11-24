@@ -2,8 +2,8 @@ package tacos;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
 import java.time.Duration;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
@@ -14,7 +14,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -24,8 +23,6 @@ public class DesignAndOrderTacosBrowserTest {
 
   @LocalServerPort
   private int port;
-
-  RestTestClient rest;
 
   @BeforeAll
   public static void setup() {
@@ -45,8 +42,13 @@ public class DesignAndOrderTacosBrowserTest {
     clickDesignATaco();
     assertDesignPageElements();
     buildAndSubmitATaco("Basic Taco", "FLTO", "GRBF", "CHED", "TMTO", "SLSA");
+
+    // อยู่ที่หน้า /cart -> กดออกแบบทาโก้เพิ่ม
     clickBuildAnotherTaco();
     buildAndSubmitATaco("Another Taco", "COTO", "CARN", "JACK", "LETC", "SRCR");
+
+    // อยู่ที่หน้า /cart -> กดไปหน้าชำระเงิน (/orders/current)
+    clickProceedToCheckout();
     fillInAndSubmitOrderForm();
     assertThat(browser.getCurrentUrl()).isEqualTo(homePageUrl());
   }
@@ -57,6 +59,8 @@ public class DesignAndOrderTacosBrowserTest {
     clickDesignATaco();
     assertDesignPageElements();
     buildAndSubmitATaco("Basic Taco", "FLTO", "GRBF", "CHED", "TMTO", "SLSA");
+
+    clickProceedToCheckout();
     submitEmptyOrderForm();
     fillInAndSubmitOrderForm();
     assertThat(browser.getCurrentUrl()).isEqualTo(homePageUrl());
@@ -68,6 +72,8 @@ public class DesignAndOrderTacosBrowserTest {
     clickDesignATaco();
     assertDesignPageElements();
     buildAndSubmitATaco("Basic Taco", "FLTO", "GRBF", "CHED", "TMTO", "SLSA");
+
+    clickProceedToCheckout();
     submitInvalidOrderForm();
     fillInAndSubmitOrderForm();
     assertThat(browser.getCurrentUrl()).isEqualTo(homePageUrl());
@@ -105,24 +111,23 @@ public class DesignAndOrderTacosBrowserTest {
     assertIngredient(proteinGroup, 1, "CARN", "Carnitas");
 
     WebElement cheeseGroup = browser.findElement(By.cssSelector("div.ingredient-group#cheeses"));
-    List<WebElement> cheeses = proteinGroup.findElements(By.tagName("div"));
+    List<WebElement> cheeses = cheeseGroup.findElements(By.tagName("div"));
     assertThat(cheeses.size()).isEqualTo(2);
     assertIngredient(cheeseGroup, 0, "CHED", "Cheddar");
     assertIngredient(cheeseGroup, 1, "JACK", "Monterrey Jack");
 
     WebElement veggieGroup = browser.findElement(By.cssSelector("div.ingredient-group#veggies"));
-    List<WebElement> veggies = proteinGroup.findElements(By.tagName("div"));
+    List<WebElement> veggies = veggieGroup.findElements(By.tagName("div"));
     assertThat(veggies.size()).isEqualTo(2);
     assertIngredient(veggieGroup, 0, "TMTO", "Diced Tomatoes");
     assertIngredient(veggieGroup, 1, "LETC", "Lettuce");
 
     WebElement sauceGroup = browser.findElement(By.cssSelector("div.ingredient-group#sauces"));
-    List<WebElement> sauces = proteinGroup.findElements(By.tagName("div"));
+    List<WebElement> sauces = sauceGroup.findElements(By.tagName("div"));
     assertThat(sauces.size()).isEqualTo(2);
     assertIngredient(sauceGroup, 0, "SLSA", "Salsa");
     assertIngredient(sauceGroup, 1, "SRCR", "Sour Cream");
   }
-
 
   private void fillInAndSubmitOrderForm() {
     assertThat(browser.getCurrentUrl()).startsWith(orderDetailsPageUrl());
@@ -154,16 +159,14 @@ public class DesignAndOrderTacosBrowserTest {
         "Zip code is required",
         "Not a valid credit card number",
         "Must be formatted MM/YY",
-        "Invalid CVV"
-        );
+        "Invalid CVV");
   }
 
   private List<String> getValidationErrorTexts() {
     List<WebElement> validationErrorElements = browser.findElements(By.className("validationError"));
-    List<String> validationErrors = validationErrorElements.stream()
+    return validationErrorElements.stream()
         .map(el -> el.getText())
         .collect(Collectors.toList());
-    return validationErrors;
   }
 
   private void submitInvalidOrderForm() {
@@ -186,8 +189,7 @@ public class DesignAndOrderTacosBrowserTest {
         "Please correct the problems below and resubmit.",
         "Not a valid credit card number",
         "Must be formatted MM/YY",
-        "Invalid CVV"
-        );
+        "Invalid CVV");
   }
 
   private void fillField(String fieldName, String value) {
@@ -198,8 +200,8 @@ public class DesignAndOrderTacosBrowserTest {
 
   private void assertIngredient(WebElement ingredientGroup,
                                 int ingredientIdx, String id, String name) {
-    List<WebElement> proteins = ingredientGroup.findElements(By.tagName("div"));
-    WebElement ingredient = proteins.get(ingredientIdx);
+    List<WebElement> items = ingredientGroup.findElements(By.tagName("div"));
+    WebElement ingredient = items.get(ingredientIdx);
     assertThat(
         ingredient.findElement(By.tagName("input")).getAttribute("value"))
         .isEqualTo(id);
@@ -214,20 +216,28 @@ public class DesignAndOrderTacosBrowserTest {
   }
 
   private void clickBuildAnotherTaco() {
-    assertThat(browser.getCurrentUrl()).startsWith(orderDetailsPageUrl());
+    assertThat(browser.getCurrentUrl()).isEqualTo(cartPageUrl());
     browser.findElement(By.cssSelector("a[id='another']")).click();
   }
 
+  private void clickProceedToCheckout() {
+    assertThat(browser.getCurrentUrl()).isEqualTo(cartPageUrl());
+    browser.findElement(By.cssSelector("a[id='checkout']")).click();
+  }
 
   //
   // URL helper methods
   //
+  private String homePageUrl() {
+    return "http://localhost:" + port + "/";
+  }
+
   private String designPageUrl() {
     return homePageUrl() + "design";
   }
 
-  private String homePageUrl() {
-    return "http://localhost:" + port + "/";
+  private String cartPageUrl() {
+    return homePageUrl() + "cart";
   }
 
   private String orderDetailsPageUrl() {
@@ -237,5 +247,4 @@ public class DesignAndOrderTacosBrowserTest {
   private String currentOrderDetailsPageUrl() {
     return homePageUrl() + "orders/current";
   }
-
 }
